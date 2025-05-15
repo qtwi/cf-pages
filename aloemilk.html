@@ -28,6 +28,7 @@ A:hover {
 <!--
 function getGate(s)
 {
+  if (navigator.language == "ja") return;
   var ans = prompt('Type a code');
   if (ans == s) return;
   else window.location.replace("https://piconano.uk/");
