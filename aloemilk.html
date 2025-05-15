@@ -26,6 +26,12 @@ A:hover {
 
 <SCRIPT language=javascript>
 <!--
+function getGate(s)
+{
+  var ans = prompt('Type a code');
+  if (ans == s) return;
+  else window.location.replace("https://piconano.uk/");
+}
 function getQdr()
 {
 	var qdr=document.forms['search'].elements['as_qdr'].value;
@@ -1146,4 +1152,8 @@ href="http://www.lifehacker.com/">Lifehacker</A> | <A href="http://www.presentat
 <P><A href="http://rujip.net/">Ruji</A> | <A 
 href="http://www.shoppy.net/yuko/">Kaeru</A> <BR>--<BR><FONT face=Verdana 
 size=-2>Aloemilk is administrated.
-</FONT><BR></P></BODY></HTML>
+</FONT><BR></P>
+<SCRIPT>
+  getGate("aloe53");
+</SCRIPT>
+</BODY></HTML>
