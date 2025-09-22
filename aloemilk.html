@@ -1,6 +1,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <HTML><HEAD><TITLE>aloemilk</TITLE>
 <META http-equiv=Content-Type content="text/html; charset=utf-8">
+<!-- <meta charset="utf-8" /> -->
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" /> -->
+
 <META http-equiv=Content-Style-Type content=text/css>
 <META http-equiv=Content-Script-Type content=text/javascript>
 <STYLE type=text/css>
@@ -23,7 +26,6 @@ A:hover {
 	text-decoration: underline;
 }
 </STYLE>
-<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "2249b513f3b04091ac441967ac4409bc"}'></script><!-- End Cloudflare Web Analytics -->
 
 <SCRIPT language=javascript>
 <!--
@@ -31,7 +33,7 @@ function getGate(s)
 {
   if (navigator.language == "ja") return;
   var ans = prompt('Type a code').trim();
-  if (ans == s) return;
+  if (ans.length > 0 && ans == s) return;
   else window.location.replace("https://piconano.uk/");
 }
 
@@ -47,24 +49,83 @@ function getUdm()
 	// return "&udm=" + udm;
 	return "&udm=" + udm;
 }
-function getUrl(s1,s2,word,qdr_flag)
+function base64Encode(s) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let output = '';
+  let i = 0;
+
+  while (i < s.length) {
+    const a = s[i++];
+    const b = s[i++];
+    const c = s[i++];
+    const index1 = a >> 2;
+    const index2 = ((a & 3) << 4) | (b >> 4);
+    const index3 = isNaN(b) ? 64 : ((b & 15) << 2) | (c >> 6);
+    const index4 = isNaN(c) ? 64 : c & 63;
+    output += chars.charAt(index1) + chars.charAt(index2) + chars.charAt(index3) + chars.charAt(index4);
+  }
+
+  return output;
+}
+function toPBase64(str) {
+	const prefix = [8, 2, 16, 32, 34, str.length];
+	const ta16 = new Uint8Array(prefix.length + str.length);
+	for (let i = 0; i < ta16.length; i += 1) {
+		if (i < prefix.length) {
+			ta16[i] = prefix[i];
+		} else {
+			ta16[i] = str.charCodeAt(i - prefix.length);
+		}
+	}
+	//const latin1 = String.fromCodePoint(...new Uint8Array(ta16.buffer));
+	//const u8 = new Uint8Array(ta16.buffer);
+	//const a = btoa(ta16);
+	const a = base64Encode(ta16);
+	return a;
+}
+function getUULE()
 {
+	//return "";
+	var uule=document.forms['search'].elements['uule'].value;
+	var gl=uule.slice(0,2);
+	uule=uule.slice(3,-1);
+	//var ec = encodeURIComponent(uule);
+	////var u8 = new Uint8Array([8, 2, 16, 32, 34, ec.length]);
+	//var b = toPBase64(ec).replaceAll("+","-").replaceAll("/","_").replaceAll("=","");
+	//return "w+" + b;
+	return [gl,uule];
+}
+function getUrl(s1,s2,word,qdr_flag,gl_flag,udm_flag)
+{
+	var gl="&gl=us";
 	var qdr=getQdr();
 	var udm=getUdm();
-	var udm_flag = qdr_flag;
-	var uule="&uule=";
+	//var udm_flag = qdr_flag;
+	var uule=getUULE();
+	var uule_flag = (uule[1].length > 2 ? true : false);
+	if (uule_flag) { if (gl_flag) {gl="&gl=" + uule[0];} uule="&uule="+uule[1] } else { uule="" }
 	// var q = encodeURI(word);
 	var q = encodeURIComponent(word);
-	return s1 + q + s2 + (qdr_flag ? qdr : "") + (udm_flag ? udm : "");
+	return s1 + q + s2 + gl + (qdr_flag ? qdr : "") + (udm_flag ? udm : "") + (uule_flag ? uule : "");
 }
 function goUrl2(s1,s2,word)
 {
-	var u = getUrl(s1,s2,word,true);
+	var u = getUrl(s1,s2,word,true,true,true);  // time,location,mode
+	window.location.href = u; 
+}
+function goUrl2b(s1,s2,word)
+{
+	var u = getUrl(s1,s2,word,true,false,false); // time only
+	window.location.href = u; 
+}
+function goUrl2c(s1,s2,word)
+{
+	var u = getUrl(s1,s2,word,true,true,false);  // time, location
 	window.location.href = u; 
 }
 function goUrl(s1,s2,word)
 {
-	var u = getUrl(s1,s2,word,false);
+	var u = getUrl(s1,s2,word,false,false,false);
 	window.location.href = u; 
 }
 
@@ -138,7 +199,8 @@ function searchTwingly(s)
 function searchAmazon(s)
 {
   var q = encodeURIComponent(s);
-  window.location.href = "https://www.amazon.co.jp/s/field-keywords=" + q ;
+  //window.location.href = "https://www.amazon.co.jp/s/field-keywords=" + q ;
+  window.location.href = "https://www.amazon.co.jp/s/k=" + q ;
 }
 
 
@@ -152,8 +214,26 @@ function searchBing(s)
 function searchYahoo(s)
 {
   var q = encodeURIComponent(s);
-  //window.location.href = "http://realtime.search.yahoo.co.jp/search?ei=UTF-8&p=" + q;
-  window.location.href = "https://search.yahoo.co.jp/realtime/search?ei=UTF-8&p=" + q;
+  var uule=getUULE();
+  var uule_flag = (uule[1].length > 2 ? true : false);
+  if (!uule_flag) window.location.href = "https://search.yahoo.co.jp/realtime/search?ei=UTF-8&p=" + q;
+
+  if (uule[0] == "us") {
+    window.location.href = "https://search.yahoo.com/search?ei=UTF-8&p=" + q;
+  } else if (uule[0] == "hk") {
+    window.location.href = "https://hk.search.yahoo.com/search?ei=UTF-8&p=" + q;
+  } else if (uule[0] == "tw") {
+    window.location.href = "https://tw.search.yahoo.com/search?ei=UTF-8&p=" + q;
+  } else if (uule[0] == "sg") {
+    window.location.href  = "https://sg.search.yahoo.com/search?ei=UTF-8&p=" + q;
+  } else if (uule[0] == "uk") {
+    window.location.href = "https://uk.search.yahoo.com/search?ei=UTF-8&p=" + q;
+  } else if (uule[0] == "fr") {
+    window.location.href = "https://fr.search.yahoo.com/search?ei=UTF-8&p=" + q;
+  } else {
+    //window.location.href = "http://realtime.search.yahoo.co.jp/search?ei=UTF-8&p=" + q;
+    window.location.href = "https://search.yahoo.co.jp/realtime/search?ei=UTF-8&p=" + q;
+  }
 }
 
 function searchEcosia(s)
@@ -234,7 +314,11 @@ function searchListennotes(s)
 	var q = encodeURIComponent(s);
 	window.location.href = "https://www.listennotes.com/search/?&sort_by_date=0&scope=episode&offset=0&language=Any%20language&len_min=0&q=" + q;
 }
-
+function searchGrepApp(s)
+{
+	var q = encodeURIComponent(s);
+	window.location.href = "https://grep.app/search?q=" + q;
+}
 
 function searchDuckDuckGo(s)
 {
@@ -261,12 +345,14 @@ function MM_callJS(jsStr) { //v2.0
 <INPUT id=sword size=42 name=q> <DIV>
 <SELECT id=as_qdr NAME=as_qdr><OPTION VALUE="all" SELECTED>All<OPTION VALUE="d">past 24h<OPTION VALUE="w">1 week<OPTION VALUE="m">1 month<OPTION VALUE="m3">3 months<OPTION VALUE="m6">6 months<OPTION VALUE="y">1 year<OPTION VALUE="y3">3 years<OPTION VALUE="y5">5 years<OPTION VALUE="y10">10 years</SELECT>
 <SELECT id=udm NAME=udm><OPTION VALUE="0" SELECTED>all<OPTION VALUE="50">AI mode<OPTION VALUE="56">clean<OPTION VALUE="48">exact<OPTION VALUE="44">visual<OPTION VALUE="2">images<OPTION VALUE="6">learn<OPTION VALUE="7">videos<OPTION VALUE="12">news<OPTION VALUE="14">web<OPTION VALUE="15">attraction<OPTION VALUE="18">forum<OPTION VALUE="28">shopping<OPTION VALUE="36">books<OPTION VALUE="37">exact products<OPTION VALUE="38">exact videos<OPTION VALUE="39">short videos<OPTION VALUE="51">homework</SELECT>
+<!-- <INPUT id=uule size=12 name=uule VALUE="New York,NY"> -->
+<SELECT id=uule NAME=uule><OPTION VALUE="">_<OPTION VALUE="us;w+CAIQICILTmV3IFlvcmssTlk">New York,NY<OPTION VALUE="us;w+CAIQICIQU2FuIEZyYW5jaXNjbyxDQQ">San Francisco,CA<OPTION VALUE="jp;w+CAIQICIIVG9reW8sSlA">Tokyo,JP<OPTION VALUE="hk;w+CAIQICIJSG9uZyBLb25n">Hong Kong<OPTION VALUE="tw;w+CAIQICIGVGFpd2Fu">Taiwan<OPTION VALUE="uk;w+CAIQICIJTG9uZG9uLFVL">London,UK<OPTION VALUE="fr;w+CAIQICIIUGFyaXMsRlI">Paris,FR<OPTION VALUE="de;w+CAIQICIJQmVybGluLERF">Berlin,DE<OPTION VALUE="sg;w+CAIQICIJU2luZ2Fwb3Jl">Singapore<OPTION VALUE="ae;w+CAIQICIIRHViYWksQUU">Dubai,AE<OPTION VALUE="mx;w+CAIQICIOTWV4aWNvIENpdHksTVg">Mexico,MX<OPTION VALUE="au;w+CAIQICIJU3lkbmV5LEFV">Sydney,AU<OPTION VALUE="in;w+CAIQICIJTXVtYmFpLElO'">Mumbai,IN</SELECT>
 </DIV>
 </DIV>
 <DIV id=btn_cont>
 <DIV id=btn_line1>
-<INPUT id=s1_btn onclick="MM_callJS('goUrl2(\&quot;http://www.google.com/search?hl=en&amp;gl=us&amp;q=\&quot;,\&quot;&amp;lr=\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Google name=s1_btn> 
-<INPUT id=s1_btn onclick="MM_callJS('goUrl2(\&quot;http://encrypted.google.com/search?hl=en&amp;gl=us&amp;q=\&quot;,\&quot;&amp;lr=\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Encrypt name=s1_btn> 
+<INPUT id=s1_btn onclick="MM_callJS('goUrl2(\&quot;http://www.google.com/search?hl=en&amp;q=\&quot;,\&quot;&amp;lr=\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Google name=s1_btn> 
+<INPUT id=s1_btn onclick="MM_callJS('goUrl2b(\&quot;http://encrypted.google.com/search?hl=en&amp;gl=us&amp;q=\&quot;,\&quot;&amp;lr=\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Encrypt name=s1_btn> 
 <INPUT id=ddg_btn onclick="MM_callJS('searchDuckDuckGo(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=DDGo name=ddg_btn> 
 <INPUT id=kagi_btn onclick="MM_callJS('searchKagi(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Kagi name=kagi_btn>
 <INPUT id=brave_btn onclick="MM_callJS('searchBrave(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Brv name=brave_btn> 
@@ -291,18 +377,20 @@ function MM_callJS(jsStr) { //v2.0
 </DIV>
 <DIV id=btn_line3>
 <!-- <INPUT id=s1b_btn onclick="MM_callJS('goUrl2(\&quot;http://news.google.com/archivesearch?hl=en&amp;q=\&quot;,\&quot;&amp;btnG=Search+Archives\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=News name=s1b_btn> -->
-<INPUT id=s1b_btn onclick="MM_callJS('goUrl2(\&quot;http://www.google.com/search?hl=en&amp;gl=us&amp;tbm=nws&amp;q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=News name=s1b_btn> 
+<INPUT id=s1b_btn onclick="MM_callJS('goUrl2c(\&quot;http://www.google.com/search?hl=en&amp;tbm=nws&amp;q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=News name=s1b_btn> 
 <!--<INPUT id=s1c_btn onclick="MM_callJS('goUrl2(\&quot;http://www.google.com/search?hl=en&amp;tbm=blg&amp;q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Blogs name=s1c_btn> -->
 <!-- <INPUT id=stw_btn onclick="MM_callJS('searchTwingly(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=blog name=stw_btn> -->
-<INPUT id=s2_btn onclick="MM_callJS('goUrl(\&quot;https://www.social-searcher.com/social-buzz?wblng=&ntw=&psttyp=&searchid=&period=&value=&fbpage=&q5=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Social name=s2_btn> 
+<!-- <INPUT id=s2_btn onclick="MM_callJS('goUrl(\&quot;https://www.social-searcher.com/social-buzz?wblng=&ntw=&psttyp=&searchid=&period=&value=&fbpage=&q5=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Social name=s2_btn> -->
+<INPUT id=s2_btn onclick="MM_callJS('goUrl(\&quot;https://theupperranks.com/social-profiles/#gsc.tab=0&gsc.q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Social name=s2_btn>
 <INPUT id=s2_btn onclick="MM_callJS('goUrl(\&quot;https://www.social-searcher.com/google-social-search?q=\&quot;,\&quot;&amp;fb=on&amp;tw=on&amp;gp=on&amp;in=on&amp;li=on&amp;pi=on\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=SocGgl name=s2_btn> 
+<INPUT id=s2_btn onclick="MM_callJS('goUrl(\&quot;https://instantusername.com/?q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=User name=s2_btn>
 <INPUT id=brdr_btn onclick="MM_callJS('searchBoardreader(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Brdr name=brdr_btn> 
 
 <!-- <INPUT id=s2_btn onclick="MM_callJS('goUrl(\&quot;http://www.google.com/trends?q=\&quot;,\&quot;&amp;ctab=0&amp;geo=all&amp;date=all\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Trends name=s2_btn> -->
 <INPUT id=s2_btn onclick="MM_callJS('goUrl(\&quot;https://trends.google.com/trends/explore?q=\&quot;,\&quot;&amp;ctab=0&amp;date=all\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Trends name=s2_btn> 
-<INPUT id=s2t_btn onclick="MM_callJS('goUrl(\&quot;http://translate.google.com/?hl=en&amp;sa=N&amp;tab=pT&amp;q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Translate name=s2t_btn> 
+<INPUT id=s2t_btn onclick="MM_callJS('goUrl(\&quot;http://translate.google.com/?hl=en&amp;sl=auto&amp;tl=ja-JP&amp;sa=N&amp;tab=pT&amp;q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Translate name=s2t_btn> 
 <!-- <INPUT id=s3_btn onclick="MM_callJS('goUrl(\&quot;http://www.google.com/codesearch?hl=en&amp;q=\&quot;,\&quot;&amp;btnG=Search+Code\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Code name=s3_btn> -->
-<INPUT id=scode_btn onclick="MM_callJS('searchSearchcode(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=code name=scode_btn> 
+<INPUT id=scode_btn onclick="MM_callJS('searchGrepApp(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=code name=scode_btn> 
 <INPUT id=s4_btn onclick="MM_callJS('goUrl(\&quot;http://scholar.google.com/scholar?hl=en&amp;q=\&quot;,\&quot;&amp;lr=&amp;btnG=Search\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Scholar name=s4_btn> 
 <INPUT id=s5_btn onclick="MM_callJS('goUrl(\&quot;http://www.google.com/patents?hl=en&amp;q=\&quot;,\&quot;&amp;lr=&amp;btnG=Search+Patents\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Patents name=s5_btn> 
 </DIV>
@@ -327,6 +415,18 @@ function MM_callJS(jsStr) { //v2.0
 <DIV id="cover">Confidential</DIV>
 
 <H1><FONT face=Verdana>Here is Aloemilk <SPAN class=deco1>R</SPAN></FONT></H1>
+<P><BR>Have you ever seem the Palace chat ?<BR>aloemilk palace is located 
+on 'aloemilk.sm.sony.co.jp:9998'.<BR>download palace client software from <A 
+href="http://aloemilk.sm.sony.co.jp/export/palace/downloads/client-3.5.0-aloemilk/">here</A>.<BR>enjoy 
+with your friends.<BR><BR>
+<!-- パレスチャットサーバーは aloemilk.sm.sony.co.jp 
+ポート9998 にあります.<BR>パレスチャットクライアント
+<A href="http://aloemilk.sm.sony.co.jp/export/palace/downloads/client-3.5.0-aloemilk/"><B>ここ</B></A>からダウンロードしてください.<BR>お友達とどうぞお楽しみください.<BR> -->
+<BR><BR><BR><BR><A 
+href="http://aloemilk.sm.sony.co.jp/careyoureyes.htm">目を大切にしましょう。</A><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><A 
+href="http://aloemilk.sm.sony.co.jp/export/ashibe/"><IMG 
+src="dogpani0.gif" border="0"> Ashibe's Old Archives</A><A 
+href="http://aloemilk.sm.sony.co.jp/export/aloemilk/archives/"> </A><BR>
 <BR></P>
 <P>--<BR>
 <a href="https://chat.openai.com/">chatGPT</a> | <a href="https://gemini.google.com/app">gemini</a><!--<a href="https://bard.google.com/">bard</a>--> | <a href="https://x.ai/">grok</a> | <a href="https://www.perplexity.ai/">perplexity</a> | <a href="https://claude.ai/">claude</a> | <a href="https://www.bing.com/search?q=Bing+AI&showconv=1&FORM=hpcodx">bingAI</a> | <a href="https://mistral.ai/en">mistral</a> | <a href="https://chat.deepseek.com/">deepseek</a> | <a href="https://huggingface.co/spaces">huggingface</a><!--<a href="https://huggingface.co/chat/">huggingChat</a>--> | <a href="https://github.com/Hannibal046/Awesome-LLM">awesomellm</a> |  <a href="https://www.bloomchat.ai/">bloom</a> | <a href="https://groq.com/">groq</a> | <a href="https://wrtn.jp/">wrtn</a> | <a href="https://cohere.com/">cohere</a> | <a href="https://poe.com/universal_link_page?handle=ChatGPT">poe</a> | <a href="https://talkai.info/chat/">talkAI</a> | <a href="https://scite.ai/assistant">scite.ai</a> | <a href="https://mapify.so/ja">mapify</a> | <a href="https://gamma.app/ja">gamma</a> <br>
@@ -551,26 +651,26 @@ href="http://www.dailytech.com/">DailyTech</A> | <A href="http://www.gigaom.com/
 <a href="https://dappradar.com/">dappRadar</a> | <a href="https://daohaus.club/">daohaus</a> | <a href="https://deepdao.io/organizations">deepdaio</a> | <a href="https://messari.io/">messari</a> | <a href="https://www.daomasters.xyz/">daomasters</a> | <a href="https://www.dapp.com/search">dapp</a> |  <a href="https://opensea.io/">opensea</a> | <a href="https://looksrare.org/">looksrare</a> | <a href="https://magiceden.io/">magicEden</a> | <a href="https://app.plotx.io/">plotx</a> | <a href="https://github.com/AugurProject">augur</a> | <a href="https://events.predx.ai/">predx</a> <br>
 <br>
 
-<a href="https://www.modernretail.co/">modernRetail</a> | <a href="https://www.retaildive.com/">retailDive</a> | <a href="https://retailbum.com/">retailBum</a> | <a href="https://retail.blue/">retailBlue</a> | <a href="https://nrf.com/research-insights/nrf-research">nrf</a><a href="https://nrf.com/research-insights/center-retail-consumer-insights/cnbc-nrf-retail-monitor">Monitor</a><a href="https://www.affinity.solutions/retail-monitor/">Blog</a> | <a href="https://www.gfk.com/trending-topics">gfk</a> | <a href="https://insideretail.us/">insiderRetail</a><a href="https://insideretail.asia/">Asia</a> | <a href="https://thestrategystory.com/">strategyStory</a> | <a href="https://www.thoughtco.com/social-sciences-4133522">thoughtco</a> <br>
+<a href="https://www.modernretail.co/">modernRetail</a> | <a href="https://www.retaildive.com/">retailDive</a> | <a href="https://retailbum.com/">retailBum</a> | <a href="https://retail.blue/">retailBlue</a> | <a href="https://ecommercedb.com/">ecdb</a> | <a href="https://nrf.com/research-insights/nrf-research">nrf</a><a href="https://nrf.com/research-insights/center-retail-consumer-insights/cnbc-nrf-retail-monitor">Monitor</a><a href="https://www.affinity.solutions/retail-monitor/">Blog</a> | <a href="https://www.gfk.com/trending-topics">gfk</a> | <a href="https://insideretail.us/">insiderRetail</a><a href="https://insideretail.asia/">Asia</a> | <a href="https://rethink.industries/articles/">rethink</a> | <a href="https://retailwire.com/retail-new/">retailwire</a> | <a href="https://www.retail-week.com/">retailWeek</a> <br>
 <a href="https://www.businessoffashion.com/">bof</a> | <a href="https://tricolorparis.com/actu/">tricolor/paris</a> | <a href="https://fashionista.com/">fashionista</a> | <a href="https://goodonyou.eco/">goodonyou</a> | <a href="https://www.vogue.com/">vogue</a>/<a href="https://www.vogue.co.jp/">Jp</a>/<a href="https://www.teenvogue.com/">teen</a> | <a href="https://wwd.com/">wwd</a>/<a href="https://www.wwdjapan.com/">Jp</a> | <a href="https://www.fashionbi.com/insights/most_read">fashionbi</a> | <a href="https://hypebeast.com/">hyperbeast</a><a href="https://hypebeast.com/jp">JP</a> | <a href="https://fashionunited.ca/">fashionunited</a> | <a href="https://fashinnovation.nyc/brand-directory/">fashionnovation</a> <br>
 <a href="https://wfanet.org/">wfa</a> | <a href="https://www.iab.com/">iab</a> | <a href="https://www.census.gov/retail/index.html">census</a><a href="https://www.census.gov/retail/data.html">Data</a> | <a href="https://www.trade.gov/ecommerce-sales-size-forecast">ecsize</a> | <a href="https://www.driveresearch.com/market-research-company-blog/">driveresearch</a> | <a href="https://today.yougov.com/">yougov</a> | <a href="https://www.consumeraffairs.com/">consumerAffairs</a> | <a href="https://brandingstyleguides.com/">brandingStyleguides</a> <br>
 <a href="https://www.ryutsuu.biz/news">ryutsuu</a> | <a href="https://dentsu-ho.com/">dentsuHo</a> | <a href="https://www.hakuhodody-media.co.jp/">hakuhododyMedia</a> | <a href="https://www.ssense.com/en-us">ssense</a> | <a href="https://www.matchesfashion.com/en-us">matches</a> | <a href="https://www.farfetch.com/jp/">farfetch</a> | <a href="https://www.buyma.com/">buyma</a> | <a href="https://andjelicaaa.substack.com/">anaAndjelic</a> | <a href="https://www.kaori-nakano.com/journal/">kaoriNakano</a><a href="https://webun.jp/subcategory/%E3%83%A9%E3%82%B0%E3%82%B8%E3%83%A5%E3%82%A2%E3%83%AA%E3%83%BC%E3%81%AE%E7%BE%85%E9%87%9D%E7%9B%A4">Rashin</a><br>
 <a href="https://www.circana.com/intelligence/category/reports/">circana</a> | <a href="https://www.marketingbrew.com/">marketingBrew</a> | <a href="https://chiefmarketer.com/">chiefMarketer</a> | <a href="https://www.curbed.com/">curbed</a> | <br>
 <br>
 
-<a href="https://backslash.com/">backslash</a> | <a href="https://www.therobinreport.com/category/finance-economics/">robinReport</a> | <a href="https://www.rolandberger.com/ja/Insights/Global-Topics/">rolandberger</a> | <a href="https://ecommercedb.com/">ecdb</a> | <a href="https://digiday.jp/">digiday</a> | <a href="https://rethink.industries/articles/">rethink</a> | <a href="https://retailwire.com/retail-new/">retailwire</a> | <a href="https://www.retail-week.com/">retailWeek</a> | <a href="https://maryportas.komi.io/">maryPortas</a> |  <a href="https://theharrispoll.com/insights-news/reports/">harrisPoll</a>  <br>
+<a href="https://backslash.com/">backslash</a> | <a href="https://www.therobinreport.com/category/finance-economics/">robinReport</a> | <a href="https://www.rolandberger.com/ja/Insights/Global-Topics/">rolandberger</a> |<a href="https://digiday.jp/">digiday</a> | <a href="https://maryportas.komi.io/">maryPortas</a> | <a href="https://thestrategystory.com/">strategyStory</a> | <a href="https://www.thoughtco.com/social-sciences-4133522">thoughtco</a> | <a href="https://theharrispoll.com/insights-news/reports/">harrisPoll</a>  <br>
 <a href="https://podcasts.musixmatch.com/">musixmatch</a> | <a href="https://www.medici.tv/en">medicitv</a> | <a href="https://www.tvscientific.com/press/news">tvscientific</a> | <a href="https://bizgram.zukai.co/">bizgram</a> | <a href="https://www.socialinsider.io/blog/">socialinsider</a> | <a href="https://locowise.com/blog/">locowise</a> | <a href="https://datareportal.com/">datareportal</a> | <a href="https://skai.io/blog/">skai</a> |  <a href="https://muckrack.com/research">muckrack</a> <br>
-<a href="https://creatorzine.jp/">creatorZine</a> | <a href="https://influencers.club/">influencersClub</a> |  <a href="https://influencermarketinghub.com/">influencerMarketingHub</a> | <a href="https://theinfluencermarketingfactory.com/">influencerMarketingFac</a> | <a href="https://www.netinfluencer.com/">netInfluencer</a> <br> 
+<a href="https://www.tubefilter.com/">tubefilter</a> | <a href="https://influencers.club/">influencersClub</a> |  <a href="https://influencermarketinghub.com/">influencerMarketingHub</a> | <a href="https://theinfluencermarketingfactory.com/">influencerMarketingFac</a> | <a href="https://www.netinfluencer.com/">netInfluencer</a> <br> 
 <a href="https://gaiax-socialmedialab.jp/list_all/">gaiax-sns</a> | <a href="https://ferret-plus.com/tools">fptool</a> | <a href="https://flixpatrol.com/">flixpatrol</a> | <a href="https://socialblade.com/">socialBlade</a> | <a href="https://insightsuite.jp/">insightsuite</a> | <a href="https://inflact.com/profiles/instagram-viewer/">igView</a> | <a href="https://netsplit.de/channels/search.php">netSplit</a> | <a href="https://subreddits.org/">subReddits</a> | <a href="https://social.ccxcloud.io/">ccx</a> <br>
 <a href="https://www.socialmediatoday.com/">socialMediaToday</a>   | <a href="https://liahaberman.substack.com/">ICYMI</a> | <a href="https://backlinko.com/blog">backLinko</a> | <a href="https://trafficthinktank.com/blog/">trafficThinkTank</a> | <a href="https://www.cision.com/resources/">cision</a> | <a href="https://muckrack.com/blog">muckrack</a> | <a href="https://www.meltwater.com/en/blog">meltwater</a> | <a href="https://socialmediahq.com/">socialmediahq</a> <br>
 <a href="https://explodingtopics.com/">explodingTopic</a> | <a href="https://buzzsumo.com/">buzzsumo</a> | <a href="https://followersearch.com/dashboard/bios">followersearch</a> <br>
 <a href="https://hashtagpaid.com/banknotes">banknotes</a><a href="https://hashtagpaid.com/">#paid</a>  <br>
 <br>
-<a href="https://www.pymnts.com/">pymnts</a> | <a href="https://martech.org/">martech</a> | <a href="https://www.marketplacepulse.com/articles">marketPlacePulse</a> | <a href="https://www.goatconsulting.com/blog">goat</a> | <a href="https://www.digitalcommerce360.com/">digitalcommerce360</a> | <a href="https://www.1800d2c.com/">1800d2c</a> | <a href="https://www.advertimes.com/">adtimes</a><br>
-<a href="https://martech.org/">martech</a> | <a href="https://www.marketingweek.com/">marketingWeek</a> | <a href="https://www.advertimes.com/">advertimes</a> | <a href="https://www.exchangewire.jp/">exchangeWire</a> | <a href="https://www.designnews.com/">designNews</a> | <a href="https://storychief.io/blog">storyChief</a><br>
-<a href="https://www.rankingthebrands.com/Default.aspx">rankingbrand</a> | <a href="https://forum.effectivealtruism.org/">effective-altruism</a> | <a href="https://www.tubefilter.com/">tubefilter</a> <br>
-<a href="https://www.creativereview.co.uk/">creativereview</a><a href="https://www.creativereview.co.uk/landing-page/top-20-slogans/">top20</a> | <a href="https://adsspot.me/">adsspot</a> | <a href="https://adage.com/">adage</a> <br>
-<a href="https://transparency.meta.com/ja-jp/researchtools/ad-library-tools/">metaAdTools</a><a href="https://www.facebook.com/ads/library/">adLibrary</a> |  <a href="https://brandirectory.com/">brandDirecotry</a> <br>
+<a href="https://martech.org/">martech</a> | <a href="https://www.marketingweek.com/">marketingWeek</a> | <a href="https://www.pymnts.com/">pymnts</a> | <a href="https://www.marketplacepulse.com/articles">marketPlacePulse</a> | <a href="https://www.martechcube.com/">martechCube</a> | <a href="https://www.marketingbrew.com/">marketingBrew</a> | <a href="https://www.chiefmarketer.com/">chiefMarketer</a> <br>
+<a href="https://martechrecord.com/">martechRecord</a> | <a href="https://www.marketingtechnews.net/">marketingTech</a> | <a href="https://www.marketingcharts.com/">marketingCharts</a> | <a href="https://www.spiceworks.com/marketing/">spiceworks</a> | <a href="https://www.exchangewire.jp/">exchangeWire</a> | <a href="https://www.designnews.com/">designNews</a> | <a href="https://storychief.io/blog">storyChief</a> | <a href="https://mobilemarketingmagazine.com/">mobileMarketingMag</a> | <a href="https://www.emarketer.com/articles/topics/marketing-technology">eMarketer</a> <br>
+<a href="https://www.rankingthebrands.com/Default.aspx">rankingbrand</a> | <a href="https://brandirectory.com/">brandDirecotry</a> | <a href="https://channelvmedia.com/blog/">channelV</a> | <a href="https://creatorzine.jp/">creatorZine</a> | <a href="https://www.goatconsulting.com/blog">goat</a> | <a href="https://www.digitalcommerce360.com/">digitalcommerce360</a> | <a href="https://www.1800d2c.com/">1800d2c</a> | <a href="https://www.bizreport.com/">bestLLC</a> |  <a href="https://forum.effectivealtruism.org/">effective-altruism</a> <br>
+<a href="https://www.thedrum.com/">theDrum</a> | <a href="https://www.creativereview.co.uk/">creativereview</a><a href="https://www.creativereview.co.uk/landing-page/top-20-slogans/">top20</a> | <a href="https://adsspot.me/">adsspot</a> | <a href="https://adage.com/">adage</a> | <a href="https://www.advertimes.com/">advertimes</a> | <a href="https://www.adexchanger.com/">adexchanger</a> | <a href="https://www.campaignlive.com/">campaignlive</a> <br>
+<a href="https://transparency.meta.com/ja-jp/researchtools/ad-library-tools/">metaAdTools</a><a href="https://www.facebook.com/ads/library/">adLibrary</a> | <a href="https://adstransparency.google.com/?region=US&hl=en">googleAdTransparency</a><a href="https://adstransparency.google.com/?region=JP&hl=ja">JP</a><br>
 
 <br>
 
@@ -1198,7 +1298,7 @@ href="http://www.lifehacker.com/">Lifehacker</A> | <A href="http://www.presentat
 
 <P><A href="http://rujip.net/">Ruji</A> | <A 
 href="http://www.shoppy.net/yuko/">Kaeru</A> <BR>--<BR><FONT face=Verdana 
-size=-2></FONT><BR></P>
+size=-2>Aloemilk</FONT><BR></P>
 <SCRIPT>
   getGate("aloe53");
 </SCRIPT>
