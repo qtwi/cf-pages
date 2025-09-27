@@ -29,7 +29,7 @@ A:hover {
 
 <SCRIPT language=javascript>
 <!--
-function getGate(s)
+-function getGate(s)
 {
   if (navigator.language == "ja") return;
   var ans = "";
@@ -139,25 +139,37 @@ function searchTwit(s)
   // q example  word lang:ja since:2017-01-01 until:2017-01-10 from:account to:account 
   // positive :) negative :(   near:place within:15mi  (15mile)
   window.location.href = "https://twitter.com/search?src=typd&lang=ja&q=" + q;
+  
+  var w = document.forms['search'].elements['sword'].value + " site:x.com";
+  goUrl2("http://www.google.com/search?hl=en&q=", "&lr=", w);
 }
 
 function searchInstagram(s)
 {
-  if (s[0] == "#") s = s.substring(1,s.length)
-  var q = encodeURIComponent(s);
-  window.location.href = "https://www.instagram.com/explore/tags/" + q + "/";
+  //if (s[0] == "#") s = s.substring(1,s.length)
+  //var q = encodeURIComponent(s);
+  //window.location.href = "https://www.instagram.com/explore/tags/" + q + "/";
+
+  var w = document.forms['search'].elements['sword'].value + " site:instagram.com";
+  goUrl2("http://www.google.com/search?hl=en&q=", "&lr=", w);
 }
 
 function searchPinterest(s)
 {
-  var q = encodeURIComponent(s);
-  window.location.href = "https://www.pinterest.com/search/?q=" + q ;
+  //var q = encodeURIComponent(s);
+  //window.location.href = "https://www.pinterest.com/search/?q=" + q ;
+
+  var w = document.forms['search'].elements['sword'].value + " site:pinterest.com";
+  goUrl2("http://www.google.com/search?hl=en&q=", "&lr=", w);
 }
 
 function searchSubstack(s)
 {
-  var q = encodeURIComponent(s);
-  window.location.href = "https://substack.com/search/" + q + "?searching=note"  ;
+  //var q = encodeURIComponent(s);
+  //window.location.href = "https://substack.com/search/" + q + "?searching=note"  ;
+
+  var w = document.forms['search'].elements['sword'].value + " site:substack.com";
+  goUrl2("http://www.google.com/search?hl=en&q=", "&lr=", w);
 }
 
 
@@ -167,12 +179,51 @@ function searchVine(s)
   window.location.href = "https://vine.co/search/" + q ;
 }
 
+function searchTiktok(s)
+{
+  //var q = encodeURIComponent(s);
+  //window.location.href = "https://www.tiktok.com/search?q=" + q ;
+
+  var w = document.forms['search'].elements['sword'].value + " site:tiktok.com";
+  goUrl2("http://www.google.com/search?hl=en&q=", "&lr=", w);
+}
+
+function searchVimeo(s)
+{
+  //var q = encodeURIComponent(s);
+  //window.location.href = "https://vimeo.com/search?q= + q ;
+
+  var w = document.forms['search'].elements['sword'].value + " site:vimeo.com";
+  goUrl2("http://www.google.com/search?hl=en&q=", "&lr=", w);
+}
 
 function searchQuora(s)
 {
-  var q = encodeURIComponent(s);
-  window.location.href = "https://www.quora.com/search/?q=" + q ;
+  //var q = encodeURIComponent(s);
+  //window.location.href = "https://www.quora.com/search/?q=" + q ;
+
+  var w = document.forms['search'].elements['sword'].value + " site:quora.com";
+  goUrl2("http://www.google.com/search?hl=en&q=", "&lr=", w);
 }
+
+function searchReddit(s)
+{
+  //var q = encodeURIComponent(s);
+  //window.location.href = "https://www.reddit.com/search/?q=" + q ;
+
+  var w = document.forms['search'].elements['sword'].value + " site:reddit.com";
+  goUrl2("http://www.google.com/search?hl=en&q=", "&lr=", w);
+}
+
+function searchPodcast(s)
+{
+  //var q = encodeURIComponent(s);
+  //window.location.href = "https://podcasts.apple.com/jp/search?term=" + q ;
+
+  var w = document.forms['search'].elements['sword'].value + " site:podcasts.apple.com";
+  goUrl2("http://www.google.com/search?hl=en&q=", "&lr=", w);
+}
+
 
 function searchPeriscope(s)
 {
@@ -271,6 +322,12 @@ function searchKagi(s)
   window.location.href = "https://kagi.com/search?q=" + q;
 }
 
+function searchGibiru(s)
+{
+  var q = encodeURIComponent(s);
+  window.location.href = "https://gibiru.com/results.html?q=" + q;
+}
+
 function searchSocial(s)
 {
   var q = encodeURIComponent(s);
@@ -302,6 +359,18 @@ function searchPhind(s)
   window.location.href = "https://www.phind.com/search?ignoreSearchResults=false&allowMultiSearch=false&q=" + q;
 }
 
+function searchMojeek(s)
+{
+  var q = encodeURIComponent(s);
+  window.location.href = "https://www.mojeek.com/search?q=" + q;
+}
+
+function searchFosstodon(s)
+{
+  var q = encodeURIComponent(s);
+  window.location.href = "https://fosstodon.org/search?q=" + q;
+}
+
 function searchMetacrawler(s)
 {
   var q = encodeURIComponent(s);
@@ -319,6 +388,14 @@ function searchListennotes(s)
 	var q = encodeURIComponent(s);
 	window.location.href = "https://www.listennotes.com/search/?&sort_by_date=0&scope=episode&offset=0&language=Any%20language&len_min=0&q=" + q;
 }
+
+function searchHappyscribe(s)
+{
+	var q = encodeURIComponent(s);
+	var w = document.forms['search'].elements['sword'].value + " site:podcasts.happyscribe.com";
+	goUrl2("http://www.google.com/search?hl=en&q=", "&lr=", w);
+}
+
 function searchGrepApp(s)
 {
 	var q = encodeURIComponent(s);
@@ -357,7 +434,7 @@ function MM_callJS(jsStr) { //v2.0
 <DIV id=btn_cont>
 <DIV id=btn_line1>
 <INPUT id=s1_btn onclick="MM_callJS('goUrl2(\&quot;http://www.google.com/search?hl=en&amp;q=\&quot;,\&quot;&amp;lr=\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Google name=s1_btn> 
-<INPUT id=s1_btn onclick="MM_callJS('goUrl2b(\&quot;http://encrypted.google.com/search?hl=en&amp;gl=us&amp;q=\&quot;,\&quot;&amp;lr=\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Encrypt name=s1_btn> 
+<INPUT id=s1_btn onclick="MM_callJS('goUrl2b(\&quot;http://encrypted.google.com/search?hl=en&amp;gl=us&amp;q=\&quot;,\&quot;&amp;lr=\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=encrypt name=s1_btn> 
 <INPUT id=ddg_btn onclick="MM_callJS('searchDuckDuckGo(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=DDGo name=ddg_btn> 
 <INPUT id=kagi_btn onclick="MM_callJS('searchKagi(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Kagi name=kagi_btn>
 <INPUT id=brave_btn onclick="MM_callJS('searchBrave(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Brv name=brave_btn> 
@@ -365,19 +442,22 @@ function MM_callJS(jsStr) { //v2.0
 <INPUT id=mcr_btn onclick="MM_callJS('searchMetacrawler(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=MCr name=mcr_btn> 
 <INPUT id=eco_btn onclick="MM_callJS('searchEcosia(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Eco name=eco_btn> 
 <INPUT id=ix_btn onclick="MM_callJS('searchStartpage(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Ix name=ix_btn>
+<INPUT id=gb_btn onclick="MM_callJS('searchGibiru(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Gbr name=gb_btn>
 <INPUT id=ssel_btn onclick="MM_callJS('goUrl(\&quot;http://www.secretsearchenginelabs.com/find/\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Ssel name=ssel_btn> 
 <INPUT id=sbg_btn onclick="MM_callJS('searchBing(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Bing name=sbg_btn> 
 <INPUT id=syh_btn onclick="MM_callJS('searchYahoo(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Yahoo name=syh_btn> 
 </DIV>
 <DIV id=btn_line2>
 <INPUT id=stw_btn onclick="MM_callJS('searchTwit(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Twitter name=stw_btn> 
-<INPUT id=stw2_btn onclick="MM_callJS('searchSocial(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Mention name=stw2_btn> 
-<INPUT id=stk_btn onclick="MM_callJS('searchSubstack(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Substack name=stk_btn> 
-<!-- <INPUT id=stw_btn onclick="MM_callJS('searchVine(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Vine name=stw_btn> -->
-<INPUT id=s2_btn onclick="MM_callJS('goUrl(\&quot;https://vimeo.com/search?q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Vimeo name=s2_btn> 
+<!-- <INPUT id=stw2_btn onclick="MM_callJS('searchSocial(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Mention name=stw2_btn> -->
 <INPUT id=sin_btn onclick="MM_callJS('searchInstagram(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Instagram name=sin_btn> 
 <INPUT id=spi_btn onclick="MM_callJS('searchPinterest(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Pinterest name=spi_btn> 
+<INPUT id=stk_btn onclick="MM_callJS('searchTiktok(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Tiktok name=spi_btn> 
+<!-- <INPUT id=stw_btn onclick="MM_callJS('searchVine(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Vine name=stw_btn> -->
+<INPUT id=s2_btn onclick="MM_callJS('searchVimeo(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Vimeo name=s2_btn> 
+<INPUT id=stk_btn onclick="MM_callJS('searchSubstack(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Substack name=stk_btn> 
 <INPUT id=squ_btn onclick="MM_callJS('searchQuora(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Quora name=squ_btn> 
+<INPUT id=srd_btn onclick="MM_callJS('searchReddit(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Reddit name=squ_btn> 
 <INPUT id=sam_btn onclick="MM_callJS('searchAmazon(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Amazon name=sam_btn> 
 </DIV>
 <DIV id=btn_line3>
@@ -400,10 +480,11 @@ function MM_callJS(jsStr) { //v2.0
 <INPUT id=s5_btn onclick="MM_callJS('goUrl(\&quot;http://www.google.com/patents?hl=en&amp;q=\&quot;,\&quot;&amp;lr=&amp;btnG=Search+Patents\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Patents name=s5_btn> 
 </DIV>
 <DIV id=btn_line4>
-<INPUT id=s51_btn onclick="MM_callJS('searchListennotes(document.forms[\'search\'].elements[\'sword\'].value);')"  type=button value=Podcast name=s51_btn> 
-<INPUT id=s6_btn onclick="MM_callJS('goUrl2(\&quot;http://www.google.com/search?hl=en&amp;gl=us&amp;tbm=vid&amp;q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Video name=s6_btn> 
+<INPUT id=s51_btn onclick="MM_callJS('searchPodcast(document.forms[\'search\'].elements[\'sword\'].value);')"  type=button value=Podcast name=s51_btn> 
+<INPUT id=s52_btn onclick="MM_callJS('searchHappyscribe(document.forms[\'search\'].elements[\'sword\'].value);')"  type=button value=Transcript name=s52_btn> 
+<INPUT id=s6_btn onclick="MM_callJS('goUrl2c(\&quot;http://www.google.com/search?hl=en&amp;gl=us&amp;tbm=vid&amp;q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Video name=s6_btn> 
 <!-- <INPUT id=s7_btn onclick="MM_callJS('goUrl(\&quot;http://images.google.com/images?hl=en&amp;tab=vi&amp;q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Images name=s7_btn> -->
-<INPUT id=s7_btn onclick="MM_callJS('goUrl2(\&quot;http://www.google.com/search?hl=en&amp;gl=us&amp;tbm=isch&amp;source=lnmt&amp;sa=X&amp;q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Images name=s7_btn> 
+<INPUT id=s7_btn onclick="MM_callJS('goUrl2c(\&quot;http://www.google.com/search?hl=en&amp;gl=us&amp;tbm=isch&amp;source=lnmt&amp;sa=X&amp;q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Images name=s7_btn> 
 <INPUT id=stw_btn onclick="MM_callJS('searchSoundcloud(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=sound name=stw_btn> 
 <INPUT id=s8_btn onclick="MM_callJS('goUrl(\&quot;http://books.google.com/books?hl=en&amp;gl=us&amp;tab=vi&amp;q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Books name=s8_btn> 
 <INPUT id=s8_btn onclick="MM_callJS('goUrl(\&quot;https://datasetsearch.research.google.com/search?hl=en&amp;gl=us&amp;query=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Dataset name=s8_btn> 
@@ -734,7 +815,7 @@ href="http://www.dailytech.com/">DailyTech</A> | <A href="http://www.gigaom.com/
 <a href="https://www.foodexport-jp.org/foodlink/">usfoodlink</a> | <a href="https://simi.or.jp/grc/">simi</a> | <a href="https://gsgii.org/publications/">gsgii</a> | <a href="https://www.jsda.or.jp/sdgs/impactmmtool/">imacttool</a> | <a href="https://www.principal.com/about-us/global-insights/well-being-index-insights">wellbeingIndex</a> | <a href="https://carnegieuktrust.org.uk/publications/">gdw</a> <br>
 <br>
 
-<a href="https://osintframework.com/">osintframework</a> | <a href="https://inteltechniques.com/tools/index.html" _oldhref="https://inteltechniques.com/menu.html">inteltech</a> | <a href="https://www.osinttechniques.com/osint-tools.html">osinttech</a> | <a href="https://www.osintcombine.com/tools">osintCombine</a> | <a href="https://seon.io/resources/the-best-tools-for-osint/">seon.io</a> | <a href="https://geekflare.com/osint-tools/">geekflare</a> | <a href="https://www.shodan.io/">shodan</a> | <a href="https://www.virustotal.com/">virustotal</a> | <a href="https://www.threatminer.org/">threatminer</a> | <a href="https://osint.tools/">ositTools</a> <br>
+<a href="https://osintframework.com/">osintframework</a> | <a href="https://inteltechniques.com/tools/index.html" _oldhref="https://inteltechniques.com/menu.html">inteltech</a> | <a href="https://www.osinttechniques.com/osint-tools.html">osinttech</a> | <a href="https://www.osintcombine.com/tools">osintCombine</a> | <a href="https://seon.io/resources/the-best-tools-for-osint/">seon.io</a> | <a href="https://geekflare.com/osint-tools/">geekflare</a> | <a href="https://www.shodan.io/">shodan</a> | <a href="https://www.virustotal.com/">virustotal</a> | <a href="https://www.threatminer.org/">threatminer</a> | <a href="https://thehiddenwiki.org/">hiddenWiki</a> | <a href="https://www.breachsense.com/breaches/">breachsense</a>| <a href="https://osint.tools/">ositTools</a> <br>
 <a href="https://www.factcheck.org/">factcheck</a> | <a href="https://mediabiasfactcheck.com/">mediabiasfactcheck</a> | <a href="https://www.allsides.com/unbiased-balanced-news">allsides</a> | <a href="https://www.darkreading.com/">darkreading</a> | <a href="https://scan.aura.com/">scanAura</a> | <a href="https://www.opentracker.net/feature/ip-tracker/">opentracker</a> | <a href="https://www.ipqualityscore.com/">ipqs</a> | <a href="https://www.trackmyhashtag.com/">trackmyhashtag</a> <br>
 <a href="https://radar.cloudflare.com/">cf.radar</a> <br>
 <br>
@@ -1000,6 +1081,7 @@ href="http://www.google.com/dirhp">Ggl directory</A> | <a href="http://groups.go
 
 <BR>
 <BR>
+
 <A 
 href="http://launch.yahoo.com/">LAUNCHcast</A> | <A 
 href="http://www.npr.org/">NPR</A> | <A HREF="http://smart.fm/">SmartFm</A> | <A HREF="http://www.englishcentral.com/">EnglishCentral</A> | <A HREF="http://www.rarejob.com/">Rarejob</A> <BR>
