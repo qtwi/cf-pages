@@ -29,7 +29,7 @@ A:hover {
 
 <SCRIPT language=javascript>
 <!--
--function getGate(s)
+function getGate(s)
 {
   if (navigator.language == "ja") return;
   var ans = "";
@@ -50,6 +50,9 @@ function getUdm()
 {
 	var udm=document.forms['search'].elements['udm'].value;
 	// return "&udm=" + udm;
+	if (isNaN(Number(udm))) {
+	  return udm
+	}
 	return "&udm=" + udm;
 }
 function base64Encode(s) {
@@ -100,35 +103,78 @@ function getUULE()
 }
 function getUrl(s1,s2,word,qdr_flag,gl_flag,udm_flag)
 {
+    var hlm={"us":"en","jp":"ja","uk":"en","fr":"fr","de":"de", "es":"es", "sg":"zh", "hk":"zh", "tw":"zh", "kr":"ko", "vn":"vi", "th":"th", "my":"ms","it":"it", "ca":"en", "ae":"ar", "il":"he", "in":"hi", "za":"en", "au":"en", "nz":"en", "ch":"de", "se":"sv", "cl":"es", "ar":"pt", "nl":"nl", "be":"nl","mx":"es", "tr":"tr" } 
+	var hlc={"uk":"gb"}
 	var gl="&gl=us";
 	var qdr=getQdr();
 	var udm=getUdm();
-	//var udm_flag = qdr_flag;
+	////var udm_flag = qdr_flag;
+	// udm 
+	if (udm_flag && udm.indexOf("udm") < 1) {
+	  if (udm.indexOf("instagram") > -1) {
+	    word += " site:instagram.com";  // &as_sitesearch=instagram.com
+		udm="&udm=2"; // image
+	  } else if (udm.indexOf("twitter") > -1) {
+	    word += " site:x.com";
+		udm="&udm=14"; // or 0, web
+	  } else if (udm.indexOf("trends") > -1) {
+	    s1 = "https://trends.google.com/trends/explore?q="; s2 = "&date=all";
+		gl_flag = 1;
+	  } else if (udm.indexOf("finance") > -1) {
+	    s1 = "https://www.google.com/finance/?hl=en&q="; s2 = "";
+	    gl_flag = 0; // or 2
+	  } else if (udm.indexOf("patents") > -1) {
+		s1 = "https://www.google.com/patents?hl=en&q="; s2 = "&lr=&btnG=Search+Patents";
+		gl_flag = 0;
+	  } else if (udm.indexOf("scholar") > -1) {
+	    s1 = "https://scholar.google.com/scholar?hl=en&q="; s2 = "&lr=&btnG=Search";
+		gl_flag = 0; 
+	  } else if (udm.indexOf("translate") > -1) {
+	    s1 = "https://translate.google.com/?hl=en&sl=auto&tl=ja&sa=N&tab=pT&q="; s2 = "&op=translate";
+		if (word.indexOf("https://") > -1) {
+		  // https://translate.google.com/translate?sl=auto&tl=ja&hl=en&u=https://host/path&client=webapp
+	      s1 = "https://translate.google.com/?hl=en&sl=auto&tl=ja&q="; s2 = "&op=websites";
+		}
+		gl_flag = 0;
+	  }
+	  if (s1.indexOf("patents") > 0 || s1.indexOf("finance") > 0 || s1.indexOf("www.google") < 0) {
+        udm = ""; udm_flag = false; qdr_flag = false;
+      }
+	}
+    // uule : location, language
 	var uule=getUULE();
 	var uule_flag = (uule[1].length > 2 ? true : false);
-	if (uule_flag) { if (gl_flag) {gl="&gl=" + uule[0];} uule="&uule="+uule[1] } else { uule="" }
+	if (uule_flag) { 
+	  if (gl_flag > 1) {gl="&gl=" + uule[0];} 
+	  else if (gl_flag > 0) {
+	    gl="&hl=" + (uule[0] in hlm ? hlm[uule[0]] : "en");
+        if (s1.indexOf("trends.google") > 0) { gl += "&geo=" + (uule[0] in hlc ? hlc[uule[0]] : uule[0]).toUpperCase(); }		
+	  }
+	  uule="&uule="+uule[1]
+	} else { uule="" }
+	// &safe=active or off, &pws=0 : personalize off, 
 	// var q = encodeURI(word);
 	var q = encodeURIComponent(word);
 	return s1 + q + s2 + gl + (qdr_flag ? qdr : "") + (udm_flag ? udm : "") + (uule_flag ? uule : "");
 }
 function goUrl2(s1,s2,word)
 {
-	var u = getUrl(s1,s2,word,true,true,true);  // time,location,mode
+	var u = getUrl(s1,s2,word,true,2,true);  // time,location,mode
 	window.location.href = u; 
 }
 function goUrl2b(s1,s2,word)
 {
-	var u = getUrl(s1,s2,word,true,false,false); // time only
+	var u = getUrl(s1,s2,word,true,0,false); // time only
 	window.location.href = u; 
 }
 function goUrl2c(s1,s2,word)
 {
-	var u = getUrl(s1,s2,word,true,true,false);  // time, location
+	var u = getUrl(s1,s2,word,true,1,false);  // time, location
 	window.location.href = u; 
 }
 function goUrl(s1,s2,word)
 {
-	var u = getUrl(s1,s2,word,false,false,false);
+	var u = getUrl(s1,s2,word,false,0,false);
 	window.location.href = u; 
 }
 
@@ -426,7 +472,7 @@ function MM_callJS(jsStr) { //v2.0
 <DIV id=sword_cont STYLE="height:64pt;float:left">
 <INPUT id=sword size=42 name=q> <DIV>
 <SELECT id=as_qdr NAME=as_qdr><OPTION VALUE="all" SELECTED>All<OPTION VALUE="d">past 24h<OPTION VALUE="w">1 week<OPTION VALUE="m">1 month<OPTION VALUE="m3">3 months<OPTION VALUE="m6">6 months<OPTION VALUE="y">1 year<OPTION VALUE="y3">3 years<OPTION VALUE="y5">5 years<OPTION VALUE="y10">10 years</SELECT>
-<SELECT id=udm NAME=udm><OPTION VALUE="0" SELECTED>all<OPTION VALUE="50">AI mode<OPTION VALUE="56">clean<OPTION VALUE="48">exact<OPTION VALUE="44">visual<OPTION VALUE="2">images<OPTION VALUE="6">learn<OPTION VALUE="7">videos<OPTION VALUE="12">news<OPTION VALUE="14">web<OPTION VALUE="15">attraction<OPTION VALUE="18">forum<OPTION VALUE="28">shopping<OPTION VALUE="36">books<OPTION VALUE="37">exact products<OPTION VALUE="38">exact videos<OPTION VALUE="39">short videos<OPTION VALUE="51">homework</SELECT>
+<SELECT id=udm NAME=udm><OPTION VALUE="0" SELECTED>all<OPTION VALUE="50">AI mode<OPTION VALUE="56">clean<OPTION VALUE="2">images<OPTION VALUE="7">videos<OPTION VALUE="39">short videos<OPTION VALUE="12">news<OPTION VALUE="14">web<OPTION VALUE="18">forum<OPTION VALUE="28">shopping<OPTION VALUE="36">books<OPTION VALUE="6">learn<OPTION VALUE="trends">trends<OPTION VALUE="finance">finance<OPTION VALUE="patents">patents<OPTION VALUE="scholar">scholar<OPTION VALUE="translate">translate<OPTION VALUE="instagram">instagram<OPTION VALUE="twitter">twitter<OPTION VALUE="44">visual<OPTION VALUE="15">things2do<OPTION VALUE="8">job<OPTION VALUE="5">hotel<OPTION VALUE="48">exact<OPTION VALUE="37">exact products<OPTION VALUE="38">exact videos<OPTION VALUE="51">homework</SELECT>
 <!-- <INPUT id=uule size=12 name=uule VALUE="New York,NY"> -->
 <SELECT id=uule NAME=uule><OPTION VALUE="">_<OPTION VALUE="us;w+CAIQICILTmV3IFlvcmssVVM">New York,US<OPTION VALUE="us;w+CAIQICIQU2FuIEZyYW5jaXNjbyxVUw">San Francisco,US<OPTION VALUE="us;w+CAIQICIKU2VhdHRsZSxVUw">Seattle,US<OPTION VALUE="jp;w+CAIQICIIVG9reW8sSlA">Tokyo,JP<OPTION VALUE="jp;w+CAIQICIIT3Nha2EsSlA">Osaka,JP<OPTION VALUE="hk;w+CAIQICIJSG9uZyBLb25n">Hong Kong<OPTION VALUE="tw;w+CAIQICIGVGFpd2Fu">Taiwan<OPTION VALUE="sg;w+CAIQICIJU2luZ2Fwb3Jl">Singapore<OPTION VALUE="uk;w+CAIQICIJTG9uZG9uLFVL">London,UK<OPTION VALUE="fr;w+CAIQICIIUGFyaXMsRlI">Paris,FR<OPTION VALUE="fr;w+CAIQICIMTWFyc2VpbGxlLEZS">Marseille,FR<OPTION VALUE="de;w+CAIQICIJQmVybGluLERF">Berlin,DE<OPTION VALUE="be;w+CAIQICIKQnJ1c3NlbCxCRQ">Brussel,BE<OPTION VALUE="nl;w+CAIQICIMQW1zdGVyZGFtLE5M">Amsterdam,NL<OPTION VALUE="it;w+CAIQICIJTWlsYW5vLElU">Milano,IT<OPTION VALUE="it;w+CAIQICIHUm9tYSxJVA">Roma,IT<OPTION VALUE="it;w+CAIQICIKVmVuZXppYSxJVA">Venezia,IT<OPTION VALUE="es;w+CAIQICIMQmFyY2Vsb25hLEVT">Barcelona,ES<OPTION VALUE="ch;w+CAIQICIJWnVyaWNoLENI">Zurich,CH<OPTION VALUE="se;w+CAIQICIMU3RvY2tob2xtLFNF">Stockholm,SE<OPTION VALUE="ae;w+CAIQICIIRHViYWksQUU">Dubai,AE<OPTION VALUE="il;w+CAIQICIMSmVydXNhbGVtLElM">Jerusalem,IL<OPTION VALUE="tr;w+CAIQICILSXN0YW5idWwsVFI">Istanbul,TR<OPTION VALUE="ca;w+CAIQICIKVG9yb250byxDQQ">Toronto,CA<OPTION VALUE="ca;w+CAIQICILTW9udHJlYWwsQ0E">Montreal,CA<OPTION VALUE="ca;w+CAIQICIMVmFuY291dmVyLENB">Vancouver,CA<OPTION VALUE="mx;w+CAIQICIOTWV4aWNvIENpdHksTVg">Mexico,MX<OPTION VALUE="au;w+CAIQICIJU3lkbmV5LEFV">Sydney,AU<OPTION VALUE="nz;w+CAIQICINV2VsbGluZ3RvbixOWg">Wellington,NZ<OPTION VALUE="in;w+CAIQICIJTXVtYmFpLElO">Mumbai,IN<OPTION VALUE="in;w+CAIQICIIRGVsaGksSU4">Delhi,IN<OPTION VALUE="in;w+CAIQICIMSHlkZXJhYmFkLElO">Hyderabad,IN<OPTION VALUE="th;w+CAIQICIKQmFuZ2tvayxUSA">Bangkok,TH<OPTION VALUE="vn;w+CAIQICIOSG8gQ2hpIE1pbmgsVk4">Ho Chi Minh,VN<OPTION VALUE="my;w+CAIQICIPS3VhbGEgTHVtcHVyLE1Z">Kuala Lumpur,MY<OPTION VALUE="kr;w+CAIQICIIU2VvdWwsS1I">Seoul,KR<OPTION VALUE="ar;w+CAIQICIPQnVlbm9zIEFpcmVzLEFS">Buenos Aires,AR<OPTION VALUE="cl;w+CAIQICILU2FudGlhZ28sQ0w">Santiago,CL<OPTION VALUE="za;w+CAIQICIPSm9oYW5uZXNidXJnLFpB">Johannesburg,ZA</SELECT>
 </DIV>
@@ -472,8 +518,9 @@ function MM_callJS(jsStr) { //v2.0
 <INPUT id=brdr_btn onclick="MM_callJS('searchBoardreader(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Brdr name=brdr_btn> 
 
 <!-- <INPUT id=s2_btn onclick="MM_callJS('goUrl(\&quot;http://www.google.com/trends?q=\&quot;,\&quot;&amp;ctab=0&amp;geo=all&amp;date=all\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Trends name=s2_btn> -->
-<INPUT id=s2_btn onclick="MM_callJS('goUrl(\&quot;https://trends.google.com/trends/explore?q=\&quot;,\&quot;&amp;ctab=0&amp;date=all\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Trends name=s2_btn> 
-<INPUT id=s2t_btn onclick="MM_callJS('goUrl(\&quot;http://translate.google.com/?hl=en&amp;sl=auto&amp;tl=ja-JP&amp;sa=N&amp;tab=pT&amp;q=\&quot;,\&quot;\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Translate name=s2t_btn> 
+<!-- <INPUT id=s2_btn onclick="MM_callJS('goUrl2c(\&quot;https://trends.google.com/trends/explore?q=\&quot;,\&quot;&amp;ctab=0&amp;date=all\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Trends name=s2_btn>  -->
+<INPUT id=s2_btn onclick="MM_callJS('goUrl2c(\&quot;https://trends.google.com/trends/explore?q=\&quot;,\&quot;&amp;date=all\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Trends name=s2_btn> 
+<INPUT id=s2t_btn onclick="MM_callJS('goUrl(\&quot;http://translate.google.com/?hl=en&amp;sl=auto&amp;tl=ja&amp;sa=N&amp;tab=pT&amp;q=\&quot;,\&quot;&amp;op=translate\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Translate name=s2t_btn> 
 <!-- <INPUT id=s3_btn onclick="MM_callJS('goUrl(\&quot;http://www.google.com/codesearch?hl=en&amp;q=\&quot;,\&quot;&amp;btnG=Search+Code\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Code name=s3_btn> -->
 <INPUT id=scode_btn onclick="MM_callJS('searchGrepApp(document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=code name=scode_btn> 
 <INPUT id=s4_btn onclick="MM_callJS('goUrl(\&quot;http://scholar.google.com/scholar?hl=en&amp;q=\&quot;,\&quot;&amp;lr=&amp;btnG=Search\&quot;,document.forms[\'search\'].elements[\'sword\'].value);')" type=button value=Scholar name=s4_btn> 
@@ -501,6 +548,7 @@ function MM_callJS(jsStr) { //v2.0
 <DIV id="cover">Confidential</DIV>
 
 <H1><FONT face=Verdana>Here is Aloemilk <SPAN class=deco1>R</SPAN></FONT></H1>
+<BR>
 <P>--<BR>
 <a href="https://chat.openai.com/">chatGPT</a> | <a href="https://gemini.google.com/app">gemini</a><!--<a href="https://bard.google.com/">bard</a>--> | <a href="https://x.ai/">grok</a> | <a href="https://www.perplexity.ai/">perplexity</a> | <a href="https://claude.ai/">claude</a> | <a href="https://www.bing.com/search?q=Bing+AI&showconv=1&FORM=hpcodx">bingAI</a> | <a href="https://mistral.ai/en">mistral</a> | <a href="https://chat.deepseek.com/">deepseek</a> | <a href="https://huggingface.co/spaces">huggingface</a><!--<a href="https://huggingface.co/chat/">huggingChat</a>--> | <a href="https://github.com/Hannibal046/Awesome-LLM">awesomellm</a> |  <a href="https://www.bloomchat.ai/">bloom</a> | <a href="https://groq.com/">groq</a> | <a href="https://wrtn.jp/">wrtn</a> | <a href="https://cohere.com/">cohere</a> | <a href="https://poe.com/universal_link_page?handle=ChatGPT">poe</a> | <a href="https://talkai.info/chat/">talkAI</a> | <a href="https://scite.ai/assistant">scite.ai</a> | <a href="https://mapify.so/ja">mapify</a> | <a href="https://gamma.app/ja">gamma</a> <br>
 <a href="https://aistudio.google.com/prompts/new_chat">aiStudio</a> | <a href="https://notebooklm.google.com/">notebooklm</a> | <a href="https://deepmind.google/models/veo/">veo</a> | <a href="https://www.researchrabbit.ai/">researchrabbit</a> | <a href="https://www.genspark.ai/">genspark</a> | <a href="https://www.yeschat.ai/ja/gpts-ZxX7fHZp-BizToc-Official">yesChat</a> <br>
@@ -525,7 +573,8 @@ href="http://www.j-cast.com/">J-CAST</A> | <A
 href="http://biztech.nikkeibp.co.jp/">BizTech</A> | <A 
 href="http://www.computernews.com/">BCN</A> | <A HREF="http://markezine.jp/news/">MarkeZine</A> | <A 
 href="http://release.nikkei.co.jp/">NIKKEI PR</A> | <A HREF="http://zasshi.news.yahoo.co.jp/list/?m=president">President</A> | <A HREF="http://www.shibukei.com/headline/archives/">ShibuKei</A> | <A HREF="http://www.ismedia.jp">ismedia</A> | <A HREF="http://www.marketwatch.com/">MarketWatch</A><BR>
-<BR><BR>
+
+<a href="https://biztoc.com/">toc</a>/<a href="https://biztoc-com.translate.goog/?_x_tr_sl=fr&_x_tr_tl=ja&_x_tr_hl=en&_x_tr_pto=wapp">TOCJP</a>/<a href="https://www.yeschat.ai/ja/gpts-ZxX7fHZp-BizToc-Official">AI</a><br><br>
 
 <a href="https://www.bloomberg.co.jp/">bloomberg</a><a href="https://www.bnnbloomberg.ca/">Bnn</a><a href="https://www.bloomberg.com/live/us">Tv</a> | <a href="https://finance.yahoo.com/">YahooF</a><a href="https://finance.yahoo.com/videos/">vid</a><a href="https://www.youtube.com/channel/UCEAZeUIeJs0IjQiqTCdVSIg">Yt</a> |  <a href="https://www.wsj.com/">WSJ</a><a href="https://jp.wsj.com/">jp</a><a href="https://twitter.com/WSJ">Tw</a><a href="https://www.youtube.com/@WSJNews">Yt</a> | <a href="https://www.nytimes.com/">NYT</a><a href="https://twitter.com/nytimes">Tw</a>  | <a href="https://www.ft.com/">FT</a><a href="https://www.ft.com/unhedged">Unhedged</a><a href="https://www.ft.com/federal-reserve">FRB</a><a href="https://jbpress.ismedia.jp/category/ft">jb</a><a href="https://twitter.com/FT">Tw</a><a href="https://www.youtube.com/@FinancialTimes">Yt</a> <br>
 
@@ -545,11 +594,11 @@ href="http://www.dailytech.com/">DailyTech</A> | <A href="http://www.gigaom.com/
 <BR>
 
 <A HREF="http://b.hatena.ne.jp/">Hatebu</A>.<a href="http://hatenanews.com">news</a><!--<A HREF="http://bkuma.hatena.ne.jp">bkuma</A>--> | <a href="https://substack.com/search/trends?searching=note">Substack</a> | <a href="https://subredditstats.com/">redditStat</a> | <A HREF="https://pinterest.com/search/pins/?q=trends&rs=typed" _HREF="http://pinterest.com/">Pinterest</A> | <A HREF="https://www.google.com/search?q=trends+site%3Ahttps%3A%2F%2Fmedium.com" _HREF="http://medium.com/">medium</A> | <!--<A HREF="http://tweetmeme.com/">TweetMeme</A> | <A HREF="http://www.allvoices.com/">AllVoices</A>--> | <A HREF="https://mix.com/">mix</A> | <a href="https://the-dots.com/projects/search">dots</a> | <a href="https://www.instagram.com/">instagram</a> | <a href="http://www.tumblr.com/search/technology">tumblr</a> | <a href="https://social-trends.agorapulse.com/trends-statistics-facebook/last-4-weeks/world/all">socialTrends</a> <BR>
-<A HREF="http://ceron.jp/">Ceron</A> | <a href="https://newspicks.com/">newspicks</a> | <a href="https://gunosy.com/">gunosy</a> | <A HREF="http://www.tarosite.net/">Tarosite</A> | <A HREF="http://blog.wired.com/business">WiredEpicenter</A> | <A HREF="http://www.huffingtonpost.com/tech/">HuffTech</A>
+<!-- <A HREF="http://ceron.jp/">Ceron</A> | --><a href="https://newspicks.com/">newspicks</a> | <a href="https://agora-web.jp/">agora</a> | <!--<a href="https://gunosy.com/">gunosy</a> | <A HREF="http://www.tarosite.net/">Tarosite</A> | --><A HREF="http://blog.wired.com/business">WiredEpicenter</A> | <A HREF="http://www.huffingtonpost.com/tech/">HuffTech</A>
  | <A HREF="http://content.usatoday.com/communities/technologylive/index">TechLIVE</A> | <a href="http://content.usatoday.com/communities/sciencefair/index">SciFair</a> | <A HREF="http://io9.com/">io9</A> | <A HREF="http://www.wordyard.com/">Wordyard</A> | <A HREF="http://www.geeksugar.com/">GeekSugar</A> | <A HREF="http://www.infoworld.com/">Infoworld</A> <BR>
 <A href="http://www.salon.com/">Salon</A> | <A href="http://www.slate.com/">Slate</A> | <A HREF="http://www.theatlantic.com/">Atlantic</A> | <A HREF="https://www.poynter.org/">Poynter</A> | <A HREF="http://nautil.us/">nautilus</A> | <A HREF="http://nplusonemag.com/">n+1</A> | <A HREF="http://99percentinvisible.org/">99%inv.</A> | <a href="https://theconversation.com/uk">theconversation</a> <!--<A HREF="http://www.valleywag.com/">ValleyWag</A>--> | <A href="http://granta.com/">Granta</A> | <a href="http://allthingsd.com/">allthingsd</a>
  | <a href="https://www.usatoday.com/money/">usatoday</a> <!--<a href="http://content.usatoday.com/communities/ondeadline/index">onDeadline</a>-->  | <a href="https://fortune.com/">fortune</a> <!--<A HREF="http://money.cnn.com/magazines/fortune/">Fortune</A>--> | <A HREF="http://www.foreignpolicy.com/">FP</A> | <A HREF="http://fastcompany.com/">FASTCompany</A> <BR>
- <a href="https://trends.google.com/trending?geo=US&hl=en&hours=168">Trends</a><br>
+ <a href="https://trends.google.com/trending?geo=US&hl=en&hours=168">realtimeTrends</a> | <a href="https://search.yahoo.co.jp/realtime/search?p=%23earthquake&fr=top_ga1_sa&ei=UTF-8">earthquake</a> <br>
 <a href="https://www.webull.com/quote">webull</a><a href="https://www.webull.co.jp/quote">Jp</a> | <a href="https://www.investopedia.com/news-4427706">Investopedia</a> | <A HREF="http://www.investing.com/indices/indices-futures">investing</A> | <a href="https://issues.org/">Issues</a> | <a href="http://findgram.com/">findgram</a> |  <a href="https://mulpix.com/">mulpix</a> | <a href="https://websta.me/search">websta</a> <BR>
 <BR>
 
@@ -557,7 +606,7 @@ href="http://www.dailytech.com/">DailyTech</A> | <A href="http://www.gigaom.com/
 <a href="https://www.sec.gov/edgar/searchedgar/companysearch.html">EDGAR</a><a href="https://sec.report/CIK/">repo</a><a href="https://www.bamsec.com/">Bam</a> | <a href="https://www.annualreports.com/">annualreports</a> |  <a href="https://e-justice.europa.eu/topics/registers-business-insolvency-land/business-registers-search-company-eu_en?language=en" _href1="https://e-justice.europa.eu/searchBris.do" _href0="https://e-justice.europa.eu/489/EN/business_registers__search_for_a_company_in_the_eu">euJustice</a> | <a href="https://www.wealthadvisor.co.jp/">wealthadvisor</a>/<a href="https://www.morningstar.com/">morningstar</a>.<a href="https://www.morningstar.co.jp/">JP</a>/<a href="https://ibbotson.co.jp/">ibbotson</a>.<a href="https://www.wealthadvisor.co.jp/FundData/FundRankingRating.do">fundRank</a>/<!--<a href="http://www.morningstar.co.jp/StockInfo/sec/ranking">srk</a><a href="http://www.morningstar.co.jp/StockInfo/pts/ranking">prk</a>--> | <a href="http://www.ullet.com/">ullet</a> | <a href="https://donburi.accountant/">donburi</a>  | 
 <a href="https://www.irstreet.com/new/jp/com_list.php">irStreet</a> | <br>
 
-<a href="https://biztoc.com/">toc</a>/<a href="https://biztoc-com.translate.goog/?_x_tr_sl=fr&_x_tr_tl=ja&_x_tr_hl=en&_x_tr_pto=wapp">TOCJP</a>/<a href="https://www.yeschat.ai/ja/gpts-ZxX7fHZp-BizToc-Official">AI</a> | <a href="https://jp.tradingview.com/">tv</a> | <a href="https://finviz.com/">fv</a> | <a href="https://www.fastbull.com/">fastbull</a> | <a href="https://stockanalysis.com/">stockanalysis</a> <!-- <a href="https://jp.wallmine.com/">wallmine</a>.<a href="https://www.wallmine.com/">en</a>--> | <a href="https://insight.factset.com/">factset</a> | <a href="https://research.investors.com/markettrend.aspx">IBD</a> | <a href="https://roic.ai/">RoicAI</a> | <a href="https://www.earningswhispers.com/">EW</a>/<a href="https://earningshub.com/">EH</a> | <a href="https://simplywall.st/stocks/us">simplywall</a> | <a href="https://www.alphaquery.com/">aQuery</a> | <a href="https://www.tipranks.com/screener/stocks">tipRanks</a><a href="https://www.tipranks.com/news">News</a> | <a href="https://www.investing.com/">investing</a> | <a href="https://financialmodelingprep.com/">fmprep</a> | <a href="https://stockstory.org/">stockStory</a> | <a href="https://www.ainvest.com/market/">ainvest</a> | <a href="https://www.cmlviz.com/home">cmlviz</a> | <a href="https://capedge.com/" _href="https://docoh.com/">capEdge</a>  | <BR>
+<a href="https://jp.tradingview.com/">tv</a> | <a href="https://finviz.com/">fv</a> | <a href="https://www.fastbull.com/">fastbull</a> | <a href="https://stockanalysis.com/">stockanalysis</a> <!-- <a href="https://jp.wallmine.com/">wallmine</a>.<a href="https://www.wallmine.com/">en</a>--> | <a href="https://insight.factset.com/">factset</a> | <a href="https://research.investors.com/markettrend.aspx">IBD</a> | <a href="https://roic.ai/">RoicAI</a> | <a href="https://www.earningswhispers.com/">EW</a>/<a href="https://earningshub.com/">EH</a> | <a href="https://simplywall.st/stocks/us">simplywall</a> | <a href="https://www.alphaquery.com/">aQuery</a> | <a href="https://www.tipranks.com/screener/stocks">tipRanks</a><a href="https://www.tipranks.com/news">News</a> | <a href="https://www.investing.com/">investing</a> | <a href="https://financialmodelingprep.com/">fmprep</a> | <a href="https://stockstory.org/">stockStory</a> | <a href="https://www.ainvest.com/market/">ainvest</a> | <a href="https://www.cmlviz.com/home">cmlviz</a> | <a href="https://capedge.com/" _href="https://docoh.com/">capEdge</a>  | <BR>
 
 <a href="https://www.barchart.com/stocks/market-performance">bar/sec</a> | <a href="https://www.tradingview.com/markets/stocks-usa/sectorandindustry-sector/">tv/sec</a> | <a href="https://eresearch.fidelity.com/eresearch/goto/markets_sectors/landing.jhtml">fid/sec</a>.<a href="https://eresearch.fidelity.com/eresearch/markets_sectors/sectors/si_performance.jhtml?tab=siperformance">si</a> | <a href="https://seekingalpha.com/etfs-and-funds/etf-tables/sectors">sa/sec</a> | <a href="https://markets.ft.com/data/sectors">ft/sec</a> | <a href="https://www.msci.com/insights-gallery/sector-performance-and-concentration">msci/sec</a> |  <a href="https://novelinvestor.com/sector-performance/">anu/sec</a> | <a href="https://www.sectorspdrs.com/sectorheatmap">map/sec</a> | <a href="https://www.etfreplay.com/summary.aspx">anu/etf</a> 
  | <a href="https://www.ig.com/uk/indices/markets-indices/weekend-wall-street">wend-ws</a> | <a href="https://www.marketinout.com/chart/market.php?breadth=advance-decline-line">ad-line</a> | <a href="http://www.equityclock.com/">equityclock</a>.<a href="https://charts.equityclock.com/">charts</a> | <a href="https://stockanalysis.com/ipos/">saIpo</a> | <a href="https://www.renaissancecapital.com/IPO-Center/Pricings">ipoPrice</a> | <a href="https://www.renaissancecapital.com/IPO-Center">ipoRenaissance</a> | <a href="https://www.iposcoop.com/ipos-recently-filed/">ipoScoop</a> <BR>
@@ -614,7 +663,7 @@ href="http://www.dailytech.com/">DailyTech</A> | <A href="http://www.gigaom.com/
 
 <a href="https://www.investopedia.com/markets/">investopedia</a> | <a href="https://www.prc-brokers.com/?post_type=ennews">prc-brokers</a> | <a href="https://www.axios.com/">axios</a> | <a href="https://www.fastcompany.com/">fastCampany</a> | <a href="https://www.afr.com/">financialReviewAustralia</a> | <a href="https://www.marketsandmarkets.com/">market&amp;market</a> | <br>
 <a href="https://www.marketbeat.com/earnings/transcripts/">mbEarnings</a>/<a href="https://www.marketbeat.com/insider-trades/">Buyback</a>/<a href="https://www.marketbeat.com/insider-trades/">Insider</a>/<a href="https://www.marketbeat.com/earnings/conference-calls/">Upcoming</a>/<a href="https://www.marketbeat.com/market-data/unusual-volume-stocks/">Unusual</a>/<a href="https://www.marketbeat.com/market-data/breakout-stocks/">Breakout</a><a href="https://www.marketbeat.com/insider-trades/">Call</a>/<a href="https://www.marketbeat.com/market-data/unusual-put-options-volume/">Put</a>/<a href="https://www.marketbeat.com/short-interest/">Short</a>/<a href="https://www.marketbeat.com/ipos/">Ipo</a>/<a href="https://www.marketbeat.com/market-data/sec-filings/">Filing</a> | <br>
-<a href="https://www.meritechcapital.com/insights">meritech</a>/<a href="https://www.meritechcapital.com/benchmarking/comps-table">SaaS</a> | <a href="https://publiccomps.com/tickers?items=High+Growth+SaaS%2CTop+10+SaaS%2CVertical+SaaS">Saas@publicComps</a> | <a href="https://aventis-advisors.com/insights/">aventis</a> <br>
+<a href="https://www.meritechcapital.com/insights">meritech</a>/<a href="https://www.meritechcapital.com/benchmarking/comps-table">SaaS</a> | <a href="https://publiccomps.com/tickers?items=High+Growth+SaaS%2CTop+10+SaaS%2CVertical+SaaS">Saas@publicComps</a> | <a href="https://app.dealroom.co/lists/34637">Saas@dealroom</a> | <a href="https://app.dealroom.co/curated-heatmaps/funding/location/f/growth_stages/not_mature/rounds/not_GRANT_SPAC%20PRIVATE%20PLACEMENT/tags/not_outside%20tech?interval=yearly&rows=australia~canada~france~germany~ireland~israel~japan~~south_korea~~netherlands~spain~sweden~switzerland~~united_kingdom~~~united_states~~china~india~brazil~~Singapore_region_filter~~indonesia~~country_hk_hong_kong~&startYear=2000&type=amount">Stat@dealroom</a> | <a href="https://app.dealroom.co/curated-heatmaps/funding/location/f/growth_stages/not_mature/rounds/not_GRANT_SPAC%20PRIVATE%20PLACEMENT/tags/not_outside%20tech?interval=yearly&rows=australia~canada~france~germany~ireland~israel~japan~~south_korea~~netherlands~spain~sweden~switzerland~~united_kingdom~~~united_states~~china~india~brazil~~Singapore_region_filter~~indonesia~~country_hk_hong_kong~&startYear=2000&type=amount">Saasletter</a> | <a href="https://aventis-advisors.com/insights/">aventis</a> <br>
 <a href="https://seekingalpha.com/">seekingA<a> | <a href="https://www.bloomberg.com/markets/stocks">bloomberg</a><a href="https://www.bloomberg.com/markets/sectors">Sector</a><a href="https://www.bloomberg.com/billionaires/">Billionaire/<a href="https://news.bloomberglaw.com/">Law</a>/<a href="https://about.bnef.com/">Nef</a>/<a href="https://www.bnnbloomberg.ca/">BnnCa</a>/<a href="https://www.bloomberg.co.jp/">Jp</a> | <a href="https://www.marketwatch.com/investing/barrons">MW</a>.<a href="https://www.barrons.com/">barrons</a><a href="https://barrons.jiji.com/">JP</a> | <a href="https://www.marketscreener.com/">marketscreener</a> | <a href="https://thestreet.com/">theStreet</a> | <a href="https://www.google.com/finance?hl=en&gl=us">GglFinance<a> <br>
  <a href="https://www.benzinga.com/">bezinga</a> | <a href="https://www.marketwatch.com/">marketWatch</a> | <a href="https://www.tipranks.com/">tipranks</a> | <a href="https://www.barchart.com/">barchart</a> | <a href="https://tippinsights.com/">tippInsights</a> | <a href="https://www.morningbrew.com/">morningBrew</a> | <a href="https://www.thetradenews.com/">theTrade</a> | <a href="https://reason.com/">reason</a> | <a href="https://www.semafor.com/">semafor</a> | <a href="https://www.euractiv.com/">euroActive</a> | <a href="https://www.thedailyupside.com/">dailyUpside</a> <br>
 <BR>
@@ -736,7 +785,7 @@ href="http://www.dailytech.com/">DailyTech</A> | <A href="http://www.gigaom.com/
 <a href="https://www.tubefilter.com/">tubefilter</a> | <a href="https://influencers.club/">influencersClub</a> |  <a href="https://influencermarketinghub.com/">influencerMarketingHub</a> | <a href="https://theinfluencermarketingfactory.com/">influencerMarketingFac</a> | <a href="https://www.netinfluencer.com/">netInfluencer</a> <br> 
 <a href="https://gaiax-socialmedialab.jp/list_all/">gaiax-sns</a> | <a href="https://ferret-plus.com/tools">fptool</a> | <a href="https://flixpatrol.com/">flixpatrol</a> | <a href="https://socialblade.com/">socialBlade</a> | <a href="https://insightsuite.jp/">insightsuite</a> | <a href="https://inflact.com/profiles/instagram-viewer/">igView</a> | <a href="https://netsplit.de/channels/search.php">netSplit</a> | <a href="https://subreddits.org/">subReddits</a> | <a href="https://social.ccxcloud.io/">ccx</a> <br>
 <a href="https://www.socialmediatoday.com/">socialMediaToday</a>   | <a href="https://liahaberman.substack.com/">ICYMI</a> | <a href="https://backlinko.com/blog">backLinko</a> | <a href="https://trafficthinktank.com/blog/">trafficThinkTank</a> | <a href="https://www.cision.com/resources/">cision</a> | <a href="https://muckrack.com/blog">muckrack</a> | <a href="https://www.meltwater.com/en/blog">meltwater</a> | <a href="https://socialmediahq.com/">socialmediahq</a> <br>
-<a href="https://explodingtopics.com/">explodingTopic</a> | <a href="https://buzzsumo.com/">buzzsumo</a> | <a href="https://followersearch.com/dashboard/bios">followersearch</a> <br>
+<a href="https://explodingtopics.com/">explodingTopic</a> | <a href="https://buzzsumo.com/blog/">buzzsumo</a> | <a href="https://followersearch.com/dashboard/bios">followersearch</a> <br>
 <a href="https://hashtagpaid.com/banknotes">banknotes</a><a href="https://hashtagpaid.com/">#paid</a>  <br>
 <br>
 <a href="https://martech.org/">martech</a> | <a href="https://www.marketingweek.com/">marketingWeek</a> | <a href="https://www.pymnts.com/">pymnts</a> | <a href="https://www.marketplacepulse.com/articles">marketPlacePulse</a> | <a href="https://www.martechcube.com/">martechCube</a> | <a href="https://www.marketingbrew.com/">marketingBrew</a> | <a href="https://www.chiefmarketer.com/">chiefMarketer</a> <br>
@@ -749,10 +798,12 @@ href="http://www.dailytech.com/">DailyTech</A> | <A href="http://www.gigaom.com/
 
 <a href="https://appfigures.com/top-apps/ios-app-store/united-states/iphone/top-overall">appFigures</a> | <a href="https://app.sensortower.com/top-charts?category=0&country=US&date=2025-05-10&device=iphone&os=ios">appSensor</a><!-- <a href="https://www.data.ai/jp/apps/ios/top/store-rank/feed/free/united-states/overall/ios-phone/">appAnnie</a> --> | <a href="https://www.appranking.com/en/">appranking</a> |  <a href="https://www.businessofapps.com/">bizofapp</a><a href="https://www.businessofapps.com/data/app-rankings/">Ranking</a> | <a href="https://sensortower.com/ja/blog">sensortower</a><a href="https://sensortower.com/blog">En</a><a href="https://app.sensortower.com/?app_tab=trending&category=0">App</a> | <a href="https://appradar.com/">appRadar</a> | <a href="https://www.softwaresuggest.com/">softwareSuggest</a> | <a href="https://eliteai.tools/">eliteAiTools</a> |   <a href="https://www.vendr.com/">vendr</a> | <a href="https://appinventiv.com/blog/">appinventiv</a> <br>
 <a href="https://www.revenuecat.com/blog/">revenuecat</a> | <a href="https://chartmogul.com/">chartmogul</a><a href="https://chartmogul.com/blog/">Blog</a> | <a href="https://growjo.com/">growjo</a> | <a href="https://www.demandsage.com/category/data-statistics/">demandSage</a> |    <a href="https://getlatka.com/saas-companies">geLatka</a> | <a href="https://getlatka.com/saas-companies">SaaSRanking</a> | <a href="https://marketing.dynamicyield.com/benchmarks/">dynaicyield</a> <br>
-<a href="https://related-keywords.com/">rakko</a> | <a href="https://trends.google.co.jp/trends/trendingsearches/daily?geo=US">gtrends</a> | <a href="https://keywordtool.io/jp">kwtool</a> | <a href="https://www.spyfu.com/">spyfu</a> | <a href="https://www.wordtracker.com/">wordTracker</a> | <a href="https://backlinko.com/tools/keyword">backliko</a> | <a href="https://seranking.com/">seranking</a><a href="https://online.seranking.com/research.keywords.html/start">Research</a> | <a href="https://serpstat.com/">serpstat</a> | <a href="https://neilpatel.com/ubersuggest/">ubersuggest</a> | <a href="https://ruri-co.biz-samurai.com/">rurico</a> | <!-- <a href="https://ja.whotwi.com/">whotwi</a> --><a href="https://social-dog.net/">socialDog</a> | <a href="https://www.valuesccg.com/dockpit/">dockpit</a> | <a href="https://www.revenuegrowthagency.co.uk/latest-news">revenueGrowthAgency</a> | <a href="https://moz.com/explorer">moz</a><a href="https://moz.com/competitive-research">Competitive</a> | <a href="https://www.ryrob.com/keyword-tool/">ryrobKWT</a> <br>
-<a href="https://best-hashtags.com/">best#tag</a> | <a href="https://www.tweetbinder.com/">tweetBinder</a> | <a href="https://inflact.com/">inflact</a> | <a href="https://www.searchenginelinks.co.uk/">searchEngineLinks</a> | <a href="https://seodity.com/">seodity</a> <br>
+<br>
+<a href="https://neilpatel.com/ubersuggest/">ubersuggest</a><a href="https://app.neilpatel.com/en/ubersuggest/overview">App</a> | <a href="https://related-keywords.com/">rakko</a> | <a href="https://trends.google.co.jp/trends/trendingsearches/daily?geo=US">gtrends</a> | <a href="https://productrank.ai/">productrank</a> | <a href="https://keywordtool.io/jp">kwtool</a> | <a href="https://www.spyfu.com/">spyfu</a> | <a href="https://www.wordtracker.com/">wordTracker</a> | <a href="https://backlinko.com/tools/keyword">backliko</a> | <a href="https://seranking.com/">seRanking</a><a href="https://online.seranking.com/research.keywords.html/start">Research</a> | <a href="https://www.wordstream.com/keywords">wordstream</a> | <a href="https://serpstat.com/">serpStat</a> | <a href="https://www.keysearch.co/tools">keysearch</a> <br>
+<a href="https://ruri-co.biz-samurai.com/">rurico</a> | <!-- <a href="https://ja.whotwi.com/">whotwi</a> --><a href="https://social-dog.net/">socialDog</a> | <a href="https://www.valuesccg.com/dockpit/">dockpit</a> | <a href="https://www.revenuegrowthagency.co.uk/latest-news">revgrowthAgency</a> | <a href="https://www.bing.com/webmasters/">bingWebM</a> | <a href="https://answersocrates.com/">answerSocrates</a> | <a href="https://alsoasked.com/">alsoAsked</a> | <a href="https://www.clicks.so/keyword-research">clicksSo</a> | <a href="https://surferseo.com/">surferSeo</a> | <a href="https://lowfruits.io/">lowFruits</a> | <a href="https://moz.com/explorer">moz</a><a href="https://moz.com/competitive-research">Competitive</a> | <a href="https://www.ryrob.com/keyword-tool/">ryrobKWT</a> <br>
+<a href="https://best-hashtags.com/">best#tag</a> | <a href="https://www.tweetbinder.com/">tweetBinder</a> | <a href="https://inflact.com/">inflact</a> | <a href="https://www.searchenginelinks.co.uk/">searchEngineLinks</a> | <a href="https://seodity.com/">seodity</a> |  <br>
 <a href="https://serpwatch.io/blog/">serpWatch</a> |  <a href="https://www.searchenginewatch.com/">searchEngineLand</a> | <a href="https://searchengineland.com/">searchEngineLand</a> | <a href="https://www.socialgrowthengineers.com/">socialGrowthEngineers</a> <br>
-<a href="https://rows.com/templates">rows.com</a> | <a href="https://www.beehiiv.com/">beehiiv</a> | <a href="https://serpapi.com/">serpApi</a> <br>
+<a href="https://www.marketermilk.com/">marketerMilk</a><a href="https://www.marketermilk.com/topics">Topic</a> | <a href="https://rows.com/templates">rows.com</a> | <a href="https://www.beehiiv.com/">beehiiv</a> | <a href="https://serpapi.com/">serpApi</a> <br>
 
 <br>
 
@@ -1043,7 +1094,7 @@ href="http://maps.google.com/">Ggl map</A> <A
 href="http://maps.google.co.jp/?hl=ja&amp;gl=jp">Jp</A> | <A 
 href="http://www.google.com/webhp?complete=1&amp;hl=ja">Ggl suggest J</A> | <A 
 href="http://www.google.com/trends">Ggl trends</A> | <a href="http://www.google.com/insights/search/?hl=en">Ggl insights</a><a href="http://www.thinkwithgoogle.com/insights/">.</A>
-<a href="http://www.google.com/insights/search/?hl=ja">Jp</a> | <a href="http://www.google.com/zeitgeist/">zeitgeist</a> | <A HREF="http://www.google.com/insights/">Analytics</A> | <A 
+<a href="http://www.google.com/insights/search/?hl=ja">Jp</a> | <a href="http://www.google.com/zeitgeist/">zeitgeist</a> | <A HREF="http://www.google.com/insights/">Analytics</A> | <A HREF="https://labs.google/experiments">Labs</A> | <A 
 href="http://www.google.com/intl/en/options/">Google more</A><BR>
 <A 
 href="http://www.google.com/webhp?hl=en">Ggl en</A> | <A HREF="http://translate.google.com/">Ggl tx</A> | <A HREF="http://www.google.com/dictionary">Ggl dic</A> | <A HREF="https://www.google.com/alerts">Ggl alert</A> | <A href="http://www.google.com/s2/search/social">Ggl s2</A> | <A HREF="http://tables.googlelabs.com/">Ggl Ftable</A> | <A HREF="http://code.google.com/intl/en-US/">GglCode</A> | <A HREF="http://www.google.com/squared">Ggl ^2</A> | <A HREF="http://sites.google.com/">Ggl sites</A> | <A HREF="http://www.google.co.uk/intl/en/landing/internetstats/">Ggl NetStats</A> <BR>
@@ -1375,5 +1426,4 @@ size=-2>Aloemilk</FONT><BR></P>
 <SCRIPT>
   getGate("aloe53");
 </SCRIPT>
-
 </BODY></HTML>
